@@ -11,14 +11,15 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
 public class MyWebSocketHandler extends TextWebSocketHandler {
-    private static final Map<String, WebSocketSession> ipAddressToSessionMap = new ConcurrentHashMap<>();
-
+	
+    private static final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, WebSocketSession> ipAddressToSessionMap = new ConcurrentHashMap<>();
 
 	 // ...
 
     public void sendMessageToUser(String userId, String message) {
-       // WebSocketSession session = sessions.get(userId);
-        if (ipAddressToSessionMap != null && ipAddressToSessionMap.isOpen()) {
+        WebSocketSession session = sessions.get(userId);
+        if (session != null && session.isOpen()) {
             try {
                 session.sendMessage(new TextMessage(message));
             } catch (IOException e) {
@@ -30,7 +31,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     // ...
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
+    public void afterConnectionEstablished(WebSocketSession session)  {
     	
     	// Obtener la dirección IP del destinatario
     	String ipAddress = "192.168.0.100";
@@ -44,12 +45,16 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     	// Verificar que la sesión existe y esté abierta
     	if (recipientSession != null && recipientSession.isOpen()) {
     	    // Enviar el mensaje al destinatario
-    	    recipientSession.sendMessage(new TextMessage(message));
+    	    try {
+				recipientSession.sendMessage(new TextMessage(message));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     	} else {
     	    // Manejar el caso en el que la sesión no existe o está cerrada
     	    // ...
     	}
-
     	
     /**
         // Obtener el identificador único del usuario de la sesión
